@@ -52,7 +52,7 @@ init {
 	} else if (modules.First().ModuleMemorySize == 0x6D9000) {
     version = "v2.0 Steam";
 	} else if (modules.First().ModuleMemorySize == 0x456000) {
-  	version = "v2.2";
+		version = "v2.2";
 	}
 	vars.hookAttempts = 0;
 	vars.hooked = false;
@@ -63,6 +63,7 @@ init {
 
 start {
 	if (vars.hooked) {
+		// Start if main menu closes and IGT resets
 		if (vars.menuIDOld == 1 && vars.menuID == 0 && vars.gameTime.TotalSeconds < 1) {
 			return true;
 		}
@@ -93,25 +94,20 @@ split {
 				// Intermission 1
 				return settings[vars.int1];
 			}
-		} else if (vars.gamestateOld == 4091) {
-		// split on Violet teleporter
-			if (vars.gamestate != vars.gamestateOld) {
-				// Violet teleporter
-				return settings[vars.violet];
-			}
-		} else if (vars.gamestateOld == 3502) {
-			// split on game complete
-			if (vars.gamestate == 3503) {
-				return settings[vars.gameComplete];
-			}
+		} else if (vars.gamestateOld == 4091 && vars.gamestate != vars.gamestateOld) {
+			// split on Violet's teleporter
+			return settings[vars.violet];
+		} else if (vars.gamestateOld == 3502 && vars.gamestate == 3503) {
+			// split on game completion (When "All crew members rescued!" appears on screen)
+			return settings[vars.gameComplete];
 		} else if (vars.gamestate == 33 && vars.gamestateOld != 33) {
-			// split on talking to victoria
+			// split on talking to Victoria
 			return settings[vars.dis];
 		} else if (current.firstTextLine == "Hello!" && old.firstTextLine != current.firstTextLine) {
-			// split on "Hello!"
+			// split on "Hello!" appearing on screen
 			return settings[vars.hello];
 		} else if (vars.trinketCount == vars.trinketCountOld + 1) {
-			// split on collecting trinkets
+			// split when collecting trinkets
 			return settings[vars.trinkets];
 		}
 	}
@@ -139,7 +135,8 @@ update {
 				// print("VVVVVV Autosplitter ----- Starting scan...");
 				int addr = 0x0;
 
-				for (int i=0x00000000; i<0x02000000; i += 0x10000) {
+				for (int i = 0x00000000; i < 0x02000000; i += 0x10000) {
+					// The base address of the game's variables will always be between ????CD00 and ????D600
 					for (int j = 0xCD00; j < 0xD600; j += 0x4) {
 						addr = i+j;
 						int val = game.ReadValue<int>(new IntPtr(addr));
@@ -191,7 +188,7 @@ update {
 		}
 	}
 	if (vars.hooked) {
-		// Game is hooked succesfully
+		// Game is hooked succesfully, update variables
 		vars.gamestateOld = vars.gamestate;
 		vars.menuIDOld = vars.menuID;
 		vars.trinketCountOld = vars.trinketCount;
@@ -211,8 +208,7 @@ update {
 			print("VVVVVV Autosplitter ----- Gamestate " + vars.gamestateOld + " -> " + vars.gamestate);
 		}*/
 
-	return true;
-	} else {
-		return false;
+		return true;
 	}
+	return false;
 }
