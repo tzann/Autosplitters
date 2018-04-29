@@ -1,4 +1,4 @@
-// This code is ugly and doesn't use features such as MemoryWatchers, so please don't use this as an example ;)
+// This code is ugly and doesn't use built-in features such as MemoryWatchers, so please don't use this as an example ;)
 // TODO: implement MemoryWatchers to clean up code
 // TODO: implement "v2.0 non-Steam" version compatibility
 
@@ -17,7 +17,7 @@ state("VVVVVV", "v2.0 Steam") {
 }
 
 startup {
-	refreshRate = 2;
+	refreshRate = 60;
 
 	vars.violet = "Split on Violet's teleporter (SS1)";
 	vars.vitellary = "Split on rescuing Vitellary (SS2)";
@@ -127,7 +127,7 @@ gameTime {
 
 update {
 	if (vars.hookAttempts > 5) {
-		// print("VVVVVV Autosplitter ----- Could not hook into VVVVVV.exe");
+		print("VVVVVV Autosplitter ----- Could not hook into VVVVVV.exe");
 		return false;
 	} else if (!vars.hooked) {
 		if (version == "v2.2") {
@@ -135,16 +135,13 @@ update {
 				// print("VVVVVV Autosplitter ----- Starting scan...");
 				int addr = 0x0;
 
-				for (int i = 0x00000000; i < 0x02000000; i += 0x10000) {
+				for (int i = 0x00000000; !vars.hooked && i < 0x02000000; i += 0x10000) {
 					// The base address of the game's variables will always be between ????CD00 and ????D600
-					for (int j = 0xCD00; j < 0xD600; j += 0x4) {
+					for (int j = 0xCD00; !vars.hooked && j < 0xD600; j += 0x4) {
 						addr = i+j;
 						int val = game.ReadValue<int>(new IntPtr(addr));
 						if (game.ReadString(new IntPtr(val), 255) == current.saveDirectory) {
-							if (game.ReadValue<int>(new IntPtr(addr+0x74)) == 1 && game.ReadValue<int>(new IntPtr(addr+0x84)) == 1) {
-								vars.hooked = true;
-								break;
-							}
+							vars.hooked = true;
 						}
 					}
 				}
@@ -159,7 +156,7 @@ update {
 					vars.gameTimeSecAddr = addr+0x4c;
 					vars.gameTimeFrameAddr = addr+0x48;
 
-					// print("VVVVVV Autosplitter ----- Successfully hooked!");
+					// print("VVVVVV Autosplitter ----- Gamestate address " + addr.ToString("X8"));
 				} else {
 					vars.hookAttempts += 1;
 					return false;
@@ -206,6 +203,9 @@ update {
 
 		/*if (vars.gamestateOld != vars.gamestate) {
 			print("VVVVVV Autosplitter ----- Gamestate " + vars.gamestateOld + " -> " + vars.gamestate);
+		}
+		/*if (vars.menuIDOld != vars.menuID) {
+			print("VVVVVV Autosplitter ----- Menu ID " + vars.menuIDOld + " -> " + vars.menuID);
 		}*/
 
 		return true;
