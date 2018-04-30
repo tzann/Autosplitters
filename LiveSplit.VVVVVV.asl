@@ -1,6 +1,7 @@
 // This code is ugly and doesn't use built-in features such as MemoryWatchers, so please don't use this as an example ;)
 // TODO: implement MemoryWatchers to clean up code
 // TODO: implement "v2.0 non-Steam" version compatibility
+// TODO: implement splitting for ILs
 
 state("VVVVVV", "v2.2") {
 	int doneLoading : "VVVVVV.exe", 0x3F8024;
@@ -58,13 +59,14 @@ init {
 	vars.hooked = false;
 	vars.gamestate = -1;
 	vars.menuID = -1;
-	vars.trinketCount = -1;
+	vars.trinketCount = 0;
+	vars.gameTime = new TimeSpan(0, 0, 0, 0);
 }
 
 start {
 	if (vars.hooked) {
 		// Start if main menu closes and IGT resets
-		if (vars.menuIDOld == 1 && vars.menuID == 0 && vars.gameTime.TotalSeconds < 1) {
+		if (vars.menuIDOld == 1 && vars.menuID == 0 && vars.gameTime.TotalMilliseconds < 100) {
 			return true;
 		}
 	}
@@ -99,6 +101,7 @@ split {
 			return settings[vars.violet];
 		} else if (vars.gamestateOld == 3502 && vars.gamestate == 3503) {
 			// split on game completion (When "All crew members rescued!" appears on screen)
+			// This is when IGT stops counting, which is why we don't split on "Game complete!" appearing, which is one gamestate increment earlier
 			return settings[vars.gameComplete];
 		} else if (vars.gamestate == 33 && vars.gamestateOld != 33) {
 			// split on talking to Victoria
@@ -118,6 +121,15 @@ reset {
 	if (!vars.hooked) {
 		return false;
 	}
+	if (vars.gameTimeOld.TotalMilliseconds > vars.gameTime.TotalMilliseconds) {
+		// reset if game time resets (on exit to menu)
+		// BUG: There are glitches that reset IGT, but they would invalidate
+		// the run anyway (except Any%, which uses RTA, but then IGT is
+		// irrelevant anyway)
+		// TODO: make this not reset in ILs
+		return settings[vars.menuReset];
+	}
+	// reset if in main menu (shouldn't ever really happen, but you never know)
 	return vars.menuID == 1 && settings[vars.menuReset];
 }
 
@@ -127,17 +139,22 @@ gameTime {
 
 update {
 	if (vars.hookAttempts > 5) {
-		print("VVVVVV Autosplitter ----- Could not hook into VVVVVV.exe");
+		// If we fail to hook the game after 5 scans, there's no reason to keep scanning
+		// print("VVVVVV Autosplitter ----- Could not hook into VVVVVV.exe");
 		return false;
 	} else if (!vars.hooked) {
 		if (version == "v2.2") {
+			// Wait for the game to finish loading
+			// BUG: If clicked out or in Esc menu, this will not be the correct value, even though the game is loaded.
+			// TODO: find another value / combination of values to accurately determine whether the game is loaded.
 			if (current.doneLoading == 50) {
 				// print("VVVVVV Autosplitter ----- Starting scan...");
 				int addr = 0x0;
-
+				// Scan memory for the base address of the game's variables
 				for (int i = 0x00000000; !vars.hooked && i < 0x02000000; i += 0x10000) {
 					// The base address of the game's variables will always be between ????CD00 and ????D600
 					for (int j = 0xCD00; !vars.hooked && j < 0xD600; j += 0x4) {
+						// The address we're looking for is a pointer to a pointer to the game's save directory
 						addr = i+j;
 						int val = game.ReadValue<int>(new IntPtr(addr));
 						if (game.ReadString(new IntPtr(val), 255) == current.saveDirectory) {
@@ -147,6 +164,7 @@ update {
 				}
 
 				if (vars.hooked) {
+					// We found the address, so we can find the variables we need
 					addr += 0x74;
 					vars.gamestateAddr = addr;
 					vars.menuIDAddr = addr+0x10;
@@ -162,9 +180,11 @@ update {
 					return false;
 				}
 			} else {
+				// Game isn't finished loading yet
 				return false;
 			}
 		} else if (version == "v2.0 Steam") {
+			// We don't reaaaally need to wait for the game to load, but it's probably a good idea to wait anyway
 			if (current.doneLoading == 50) {
 				var ptr = IntPtr.Add(modules.First().BaseAddress, 0x0167658);
 				int addr = game.ReadValue<int>(ptr) + 0x4B8;
@@ -180,6 +200,7 @@ update {
 
 				// print("VVVVVV Autosplitter ----- Successfully hooked!");
 			} else {
+				// Game isn't finished loading yet
 				return false;
 			}
 		}
@@ -189,6 +210,7 @@ update {
 		vars.gamestateOld = vars.gamestate;
 		vars.menuIDOld = vars.menuID;
 		vars.trinketCountOld = vars.trinketCount;
+		vars.gameTimeOld = vars.gameTime;
 
 		vars.gamestate = game.ReadValue<int>(new IntPtr(vars.gamestateAddr));
 		vars.menuID = game.ReadValue<int>(new IntPtr(vars.menuIDAddr));
@@ -209,6 +231,8 @@ update {
 		}*/
 
 		return true;
+	} else {
+		// Game isn't hooked yet
+		return false;
 	}
-	return false;
 }
