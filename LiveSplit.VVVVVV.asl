@@ -1,7 +1,6 @@
 // This code is ugly and doesn't use built-in features such as MemoryWatchers, so please don't use this as an example ;)
 // TODO: implement MemoryWatchers to clean up code
 // TODO: implement "v2.0 non-Steam" version compatibility
-// TODO: implement splitting for ILs
 
 state("VVVVVV", "v2.2") {
 	int doneLoading : "VVVVVV.exe", 0x3F8024;
@@ -32,6 +31,7 @@ startup {
 	vars.dis = "Split on talking to Victoria (for DIS)";
 	vars.hello = "Split on \"Hello!\" (for glitched Any%)";
 	vars.menuReset = "Reset on exiting to menu";
+	vars.ils = "Start/Split/Reset on Time Trials";
 
 	settings.Add(vars.violet, true);
 	settings.Add(vars.vitellary, true);
@@ -45,6 +45,7 @@ startup {
 	settings.Add(vars.dis, false);
 	settings.Add(vars.hello, false);
 	settings.Add(vars.menuReset, true);
+	settings.Add(vars.ils, false);
 }
 
 init {
@@ -61,13 +62,25 @@ init {
 	vars.menuID = -1;
 	vars.trinketCount = 0;
 	vars.gameTime = new TimeSpan(0, 0, 0, 0);
+
+	vars.timeTrial = -1;
 }
 
 start {
 	if (vars.hooked) {
 		// Start if main menu closes and IGT resets
 		if (vars.menuIDOld == 1 && vars.menuID == 0 && vars.gameTime.TotalMilliseconds < 100) {
-			return true;
+			if (vars.timeTrial == 0) {
+				// BUG: starts on selecting intermissions and secret lab from main menu
+				return true;
+			}
+		}
+		if (vars.gameTimeOld.TotalMilliseconds > vars.gameTime.TotalMilliseconds) {
+			if (vars.timeTrial != 0 && vars.timeTrialOld == vars.timeTrial) {
+				if (vars.gameTimeOld.TotalMilliseconds >= 4000 && vars.gameTimeOld.TotalMilliseconds <= 4066)
+				// Start the timer if: game time resets between 4.000 or 4.066 seconds, the player is in a time trial and the time trial ID didn't change last frame
+				return settings[vars.ils];
+			}
 		}
 	}
 	return false;
@@ -112,6 +125,9 @@ split {
 		} else if (vars.trinketCount == vars.trinketCountOld + 1) {
 			// split when collecting trinkets
 			return settings[vars.trinkets];
+		} else if (vars.gamestate >= 82 && vars.gamestate <= 84 && vars.timeTrial != 0) {
+			// split when ending time trial
+			return settings[vars.trinkets];
 		}
 	}
 	return false;
@@ -126,8 +142,9 @@ reset {
 		// BUG: There are glitches that reset IGT, but they would invalidate
 		// the run anyway (except Any%, which uses RTA, but then IGT is
 		// irrelevant anyway)
-		// TODO: make this not reset in ILs
-		return settings[vars.menuReset];
+		if (vars.timeTrial == 0) {
+			return settings[vars.menuReset];
+		}
 	}
 	// reset if in main menu (shouldn't ever really happen, but you never know)
 	return vars.menuID == 1 && settings[vars.menuReset];
@@ -173,6 +190,7 @@ update {
 					vars.gameTimeMinAddr = addr+0x50;
 					vars.gameTimeSecAddr = addr+0x4c;
 					vars.gameTimeFrameAddr = addr+0x48;
+					vars.timeTrialAddr = addr+0x208;
 
 					// print("VVVVVV Autosplitter ----- Gamestate address " + addr.ToString("X8"));
 				} else {
@@ -196,7 +214,10 @@ update {
 				vars.gameTimeMinAddr = addr+0x44;
 				vars.gameTimeSecAddr = addr+0x40;
 				vars.gameTimeFrameAddr = addr+0x3c;
+				vars.timeTrialAddr = addr+0x138;
+
 				vars.hooked = true;
+
 
 				// print("VVVVVV Autosplitter ----- Successfully hooked!");
 			} else {
@@ -207,14 +228,7 @@ update {
 	}
 	if (vars.hooked) {
 		// Game is hooked succesfully, update variables
-		vars.gamestateOld = vars.gamestate;
-		vars.menuIDOld = vars.menuID;
-		vars.trinketCountOld = vars.trinketCount;
 		vars.gameTimeOld = vars.gameTime;
-
-		vars.gamestate = game.ReadValue<int>(new IntPtr(vars.gamestateAddr));
-		vars.menuID = game.ReadValue<int>(new IntPtr(vars.menuIDAddr));
-		vars.trinketCount = game.ReadValue<int>(new IntPtr(vars.trinketCountAddr));
 
 		int gameTimeHours = game.ReadValue<int>(new IntPtr(vars.gameTimeHourAddr));
 		int gameTimeMinutes = game.ReadValue<int>(new IntPtr(vars.gameTimeMinAddr));
@@ -223,11 +237,26 @@ update {
 
 		vars.gameTime = new TimeSpan(0, gameTimeHours, gameTimeMinutes, gameTimeSeconds, 100*gameTimeFrames/3);
 
+		vars.gamestateOld = vars.gamestate;
+		vars.menuIDOld = vars.menuID;
+		vars.trinketCountOld = vars.trinketCount;
+		vars.timeTrialOld = vars.timeTrial;
+
+		vars.gamestate = game.ReadValue<int>(new IntPtr(vars.gamestateAddr));
+		vars.menuID = game.ReadValue<int>(new IntPtr(vars.menuIDAddr));
+		vars.trinketCount = game.ReadValue<int>(new IntPtr(vars.trinketCountAddr));
+
+		vars.timeTrial = game.ReadValue<int>(new IntPtr(vars.timeTrialAddr));
+
+
 		/*if (vars.gamestateOld != vars.gamestate) {
-			print("VVVVVV Autosplitter ----- Gamestate " + vars.gamestateOld + " -> " + vars.gamestate);
-		}
+			print("VVVVVV Autosplitter ----- Gamestate " + vars.gamestateOld + " -> " + vars.gamestate + " timeTrial " + vars.timeTrialOld + " -> " + vars.timeTrial);
+		}*/
 		/*if (vars.menuIDOld != vars.menuID) {
 			print("VVVVVV Autosplitter ----- Menu ID " + vars.menuIDOld + " -> " + vars.menuID);
+		}*/
+		/*if (vars.gameTimeOld.TotalMilliseconds > vars.gameTime.TotalMilliseconds) {
+			print("VVVVVV Autosplitter ----- Reset @" + vars.gameTimeOld.TotalMilliseconds + " -> " + vars.gameTime.TotalMilliseconds + " timeTrial " + vars.timeTrialOld + " -> " + vars.timeTrial);
 		}*/
 
 		return true;
