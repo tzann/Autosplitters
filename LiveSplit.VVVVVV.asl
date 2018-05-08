@@ -154,6 +154,11 @@ gameTime {
 	return vars.gameTime;
 }
 
+isLoading {
+	// disable game time approximation
+	return true;
+}
+
 update {
 	if (vars.hookAttempts > 5) {
 		// If we fail to hook the game after 5 scans, there's no reason to keep scanning
