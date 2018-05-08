@@ -145,6 +145,7 @@ reset {
 		// the run anyway (except Any%, which uses RTA, but then IGT is
 		// irrelevant anyway)
 		// BUG: sometimes the timer randomly resets during runs
+		// Tried to fix by not resetting if gameTime is > 66
 		if (vars.timeTrial == 0) {
 			return settings[vars.menuReset] || settings[vars.ils];
 		}
