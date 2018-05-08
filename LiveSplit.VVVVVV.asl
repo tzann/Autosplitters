@@ -87,6 +87,8 @@ start {
 }
 
 split {
+	// BUG: sometimes randomly won't split... is the autosplitter "missing" the
+	// frames where the gamestate is changed to the right value?
 	if (vars.hooked) {
 		// split on crewmate rescue and intermissions
 		if (vars.gamestateOld == 3005) {
@@ -125,7 +127,7 @@ split {
 		} else if (vars.trinketCount == vars.trinketCountOld + 1) {
 			// split when collecting trinkets
 			return settings[vars.trinkets];
-		} else if (vars.gamestate >= 82 && vars.gamestate <= 84 && vars.timeTrial != 0) {
+		} else if (vars.gamestate == 83 && vars.timeTrial != 0) {
 			// split when ending time trial
 			return settings[vars.trinkets];
 		}
@@ -137,13 +139,14 @@ reset {
 	if (!vars.hooked) {
 		return false;
 	}
-	if (vars.gameTimeOld.TotalMilliseconds > vars.gameTime.TotalMilliseconds) {
+	if (vars.gameTimeOld.TotalMilliseconds > vars.gameTime.TotalMilliseconds && vars.gameTime.TotalMilliseconds < 67) {
 		// reset if game time resets (on exit to menu)
 		// BUG: There are glitches that reset IGT, but they would invalidate
 		// the run anyway (except Any%, which uses RTA, but then IGT is
 		// irrelevant anyway)
+		// BUG: sometimes the timer randomly resets during runs
 		if (vars.timeTrial == 0) {
-			return settings[vars.menuReset];
+			return settings[vars.menuReset] || settings[vars.ils];
 		}
 	}
 	// reset if in main menu (shouldn't ever really happen, but you never know)
