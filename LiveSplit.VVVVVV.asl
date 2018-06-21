@@ -29,6 +29,7 @@ startup {
 	vars.gameComplete = "Split on game completion";
 	vars.trinkets = "Split on collecting trinkets";
 	vars.dis = "Split on talking to Victoria (for DIS)";
+	vars.finalStretch = "Split on Final Level terminal";
 	vars.hello = "Split on \"Hello!\" (for glitched Any%)";
 	vars.menuReset = "Reset on exiting to menu";
 	vars.ils = "Start/Split/Reset on Time Trials";
@@ -43,6 +44,7 @@ startup {
 	settings.Add(vars.gameComplete, true);
 	settings.Add(vars.trinkets, false);
 	settings.Add(vars.dis, false);
+	settings.Add(vars.finalStretch, false);
 	settings.Add(vars.hello, false);
 	settings.Add(vars.menuReset, true);
 	settings.Add(vars.ils, false);
@@ -61,6 +63,7 @@ init {
 	vars.gamestate = -1;
 	vars.menuID = -1;
 	vars.trinketCount = 0;
+	vars.finalMode = 0;
 	vars.gameTime = new TimeSpan(0, 0, 0, 0);
 
 	vars.timeTrial = -1;
@@ -118,6 +121,9 @@ split {
 			// split on game completion (When "All crew members rescued!" appears on screen)
 			// This is when IGT stops counting, which is why we don't split on "Game complete!" appearing, which is one gamestate increment earlier
 			return settings[vars.gameComplete];
+		} else if (vars.finalMode == 1 && vars.finalModeOld == 0) {
+			// split on activating final mode
+			return settings[vars.finalStretch];
 		} else if (vars.gamestate == 33 && vars.gamestateOld != 33) {
 			// split on talking to Victoria
 			return settings[vars.dis];
@@ -147,6 +153,7 @@ reset {
 		// BUG: sometimes the timer randomly resets during runs
 		// Tried to fix by not resetting if gameTime is > 66
 		if (vars.timeTrial == 0) {
+			// print("VVVVVV Autosplitter ----- Reset @" + vars.gameTimeOld.TotalMilliseconds + " -> " + vars.gameTime.TotalMilliseconds + " timeTrial " + vars.timeTrialOld + " -> " + vars.timeTrial);
 			return settings[vars.menuReset] || settings[vars.ils];
 		}
 	}
@@ -164,9 +171,9 @@ isLoading {
 }
 
 update {
-	if (vars.hookAttempts > 5) {
+	if (vars.hookAttempts > 3) {
 		// If we fail to hook the game after 5 scans, there's no reason to keep scanning
-		// print("VVVVVV Autosplitter ----- Could not hook into VVVVVV.exe");
+		print("VVVVVV Autosplitter ----- Could not hook into VVVVVV.exe");
 		return false;
 	} else if (!vars.hooked) {
 		if (version == "v2.2") {
@@ -191,6 +198,7 @@ update {
 
 				if (vars.hooked) {
 					// We found the address, so we can find the variables we need
+					vars.finalModeAddr = addr-0x53c;
 					addr += 0x74;
 					vars.gamestateAddr = addr;
 					vars.menuIDAddr = addr+0x10;
@@ -201,7 +209,7 @@ update {
 					vars.gameTimeFrameAddr = addr+0x48;
 					vars.timeTrialAddr = addr+0x208;
 
-					// print("VVVVVV Autosplitter ----- Gamestate address " + addr.ToString("X8"));
+					// print("VVVVVV Autosplitter ----- Final mode address " + vars.finalModeAddr.ToString("X8"));
 				} else {
 					vars.hookAttempts += 1;
 					return false;
@@ -224,6 +232,7 @@ update {
 				vars.gameTimeSecAddr = addr+0x40;
 				vars.gameTimeFrameAddr = addr+0x3c;
 				vars.timeTrialAddr = addr+0x138;
+				vars.finalModeAddr = addr-0x470;
 
 				vars.hooked = true;
 
@@ -250,13 +259,14 @@ update {
 		vars.menuIDOld = vars.menuID;
 		vars.trinketCountOld = vars.trinketCount;
 		vars.timeTrialOld = vars.timeTrial;
+		vars.finalModeOld = vars.finalMode;
 
 		vars.gamestate = game.ReadValue<int>(new IntPtr(vars.gamestateAddr));
 		vars.menuID = game.ReadValue<int>(new IntPtr(vars.menuIDAddr));
 		vars.trinketCount = game.ReadValue<int>(new IntPtr(vars.trinketCountAddr));
 
 		vars.timeTrial = game.ReadValue<int>(new IntPtr(vars.timeTrialAddr));
-
+		vars.finalMode = game.ReadValue<int>(new IntPtr(vars.finalModeAddr));
 
 		/*if (vars.gamestateOld != vars.gamestate) {
 			print("VVVVVV Autosplitter ----- Gamestate " + vars.gamestateOld + " -> " + vars.gamestate + " timeTrial " + vars.timeTrialOld + " -> " + vars.timeTrial);
