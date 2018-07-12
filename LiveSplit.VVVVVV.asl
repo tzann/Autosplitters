@@ -209,7 +209,7 @@ update {
 					vars.gameTimeFrameAddr = addr+0x48;
 					vars.timeTrialAddr = addr+0x208;
 
-					print("VVVVVV Autosplitter ----- Gamestate address " + vars.gamestateAddr.ToString("X8"));
+					// print("VVVVVV Autosplitter ----- Gamestate address " + vars.gamestateAddr.ToString("X8"));
 				} else {
 					vars.hookAttempts += 1;
 					return false;
@@ -253,7 +253,7 @@ update {
 		int gameTimeSeconds = game.ReadValue<int>(new IntPtr(vars.gameTimeSecAddr));
 		int gameTimeFrames = game.ReadValue<int>(new IntPtr(vars.gameTimeFrameAddr));
 
-		// subtract one frame from the timer because otherwise the autosplitter stops the time one frame late
+		// subtract one frame from the timer because the autosplitter splits a frame late
 		vars.gameTime = new TimeSpan(0, gameTimeHours, gameTimeMinutes, gameTimeSeconds, 100*(gameTimeFrames-1)/3);
 
 		vars.gamestateOld = vars.gamestate;
