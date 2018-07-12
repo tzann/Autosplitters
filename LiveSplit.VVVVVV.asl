@@ -94,23 +94,23 @@ split {
 	// frames where the gamestate is changed to the right value?
 	if (vars.hooked) {
 		// split on crewmate rescue and intermissions
-		if (vars.gamestateOld == 3005) {
-			if (vars.gamestate == 3006) {
+		if (vars.gamestateOld == 3005 || vars.gamestateOld == 3004) {
+			if (vars.gamestate == 3006 || vars.gamestate == 3007) {
 				// Verdigris
 				return settings[vars.verdigris];
-			} else if (vars.gamestate == 3020) {
+			} else if (vars.gamestate == 3020 || vars.gamestate == 3021) {
 				// Vitellary
 				return settings[vars.vitellary];
-			} else if (vars.gamestate == 3040) {
+			} else if (vars.gamestate == 3040 || vars.gamestate == 3041) {
 				// Victoria
 				return settings[vars.victoria];
-			} else if (vars.gamestate == 3060) {
+			} else if (vars.gamestate == 3060 || vars.gamestate == 3061) {
 				// Vermilion
 				return settings[vars.vermilion];
-			} else if (vars.gamestate == 3080) {
+			} else if (vars.gamestate == 3080 || vars.gamestate == 3081) {
 				// Intermission 2
 				return settings[vars.int2];
-			} else if (vars.gamestate == 3085) {
+			} else if (vars.gamestate == 3085 || vars.gamestate == 3086) {
 				// Intermission 1
 				return settings[vars.int1];
 			}
@@ -133,9 +133,9 @@ split {
 		} else if (vars.trinketCount == vars.trinketCountOld + 1) {
 			// split when collecting trinkets
 			return settings[vars.trinkets];
-		} else if (vars.gamestate == 83 && vars.timeTrial != 0) {
+		} else if (vars.gamestate == 83 && vars.gamestateOld != 83 && vars.timeTrial != 0) {
 			// split when ending time trial
-			return settings[vars.trinkets];
+			return settings[vars.ils];
 		}
 	}
 	return false;
@@ -173,7 +173,7 @@ isLoading {
 update {
 	if (vars.hookAttempts > 3) {
 		// If we fail to hook the game after 5 scans, there's no reason to keep scanning
-		print("VVVVVV Autosplitter ----- Could not hook into VVVVVV.exe");
+		// print("VVVVVV Autosplitter ----- Could not hook into VVVVVV.exe");
 		return false;
 	} else if (!vars.hooked) {
 		if (version == "v2.2") {
@@ -209,17 +209,17 @@ update {
 					vars.gameTimeFrameAddr = addr+0x48;
 					vars.timeTrialAddr = addr+0x208;
 
-					// print("VVVVVV Autosplitter ----- Final mode address " + vars.finalModeAddr.ToString("X8"));
+					print("VVVVVV Autosplitter ----- Gamestate address " + vars.gamestateAddr.ToString("X8"));
 				} else {
 					vars.hookAttempts += 1;
 					return false;
 				}
 			} else {
-				// Game isn't finished loading yet
+				// Game hasn't finished loading yet
 				return false;
 			}
 		} else if (version == "v2.0 Steam") {
-			// We don't reaaaally need to wait for the game to load, but it's probably a good idea to wait anyway
+			// We don't really need to wait for the game to load on v2.0, but it's probably a good idea to wait anyway
 			if (current.doneLoading == 50) {
 				var ptr = IntPtr.Add(modules.First().BaseAddress, 0x0167658);
 				int addr = game.ReadValue<int>(ptr) + 0x4B8;
@@ -239,7 +239,7 @@ update {
 
 				// print("VVVVVV Autosplitter ----- Successfully hooked!");
 			} else {
-				// Game isn't finished loading yet
+				// Game hasn't finished loading yet
 				return false;
 			}
 		}
@@ -253,7 +253,8 @@ update {
 		int gameTimeSeconds = game.ReadValue<int>(new IntPtr(vars.gameTimeSecAddr));
 		int gameTimeFrames = game.ReadValue<int>(new IntPtr(vars.gameTimeFrameAddr));
 
-		vars.gameTime = new TimeSpan(0, gameTimeHours, gameTimeMinutes, gameTimeSeconds, 100*gameTimeFrames/3);
+		// subtract one frame from the timer because otherwise the autosplitter stops the time one frame late
+		vars.gameTime = new TimeSpan(0, gameTimeHours, gameTimeMinutes, gameTimeSeconds, 100*(gameTimeFrames-1)/3);
 
 		vars.gamestateOld = vars.gamestate;
 		vars.menuIDOld = vars.menuID;
@@ -277,7 +278,6 @@ update {
 		/*if (vars.gameTimeOld.TotalMilliseconds > vars.gameTime.TotalMilliseconds) {
 			print("VVVVVV Autosplitter ----- Reset @" + vars.gameTimeOld.TotalMilliseconds + " -> " + vars.gameTime.TotalMilliseconds + " timeTrial " + vars.timeTrialOld + " -> " + vars.timeTrial);
 		}*/
-
 		return true;
 	} else {
 		// Game isn't hooked yet
