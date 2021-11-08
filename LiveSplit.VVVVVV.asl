@@ -1,15 +1,5 @@
-state("VVVVVV", "v2.0") {
-	int doneLoading : "VVVVVV.exe", 0x637054;
-	string255 firstTextLine : "VVVVVV.exe", 0x637098, 0x0, 0x0;
-}
-
-state("VVVVVV", "v2.2") {
-	int doneLoading : "VVVVVV.exe", 0x3F8024;
-	string255 saveDirectory : "VVVVVV.exe", 0x3F7DD8;
-	string255 firstTextLine : "VVVVVV.exe", 0x3F8068, 0x0, 0x0;
-	// string255 secondTextLine : "VVVVVV.exe", 0x3F8068, 0x1c, 0x0;
-	// string255 thirdTextLine : "VVVVVV.exe", 0x3F8068, 0x38, 0x0;
-	// string255 fourthTextLine : "VVVVVV.exe", 0x3F8068, 0x54, 0x0;
+state("VVVVVV", "unknown") {
+	// Default state
 }
 
 state("VVVVVV", "v2.3.4") {	
@@ -33,6 +23,20 @@ state("VVVVVV", "v2.3.4") {
 	// Variables for resetting
 	int menustate : "VVVVVV.exe", 0x1C10CC; // actually called gamestate in source
 	bool ingame_titlemode : "VVVVVV.exe", 0x1C1B7E;
+}
+
+state("VVVVVV", "v2.2") {
+	int doneLoading : "VVVVVV.exe", 0x3F8024;
+	string255 saveDirectory : "VVVVVV.exe", 0x3F7DD8;
+	string255 firstTextLine : "VVVVVV.exe", 0x3F8068, 0x0, 0x0;
+	// string255 secondTextLine : "VVVVVV.exe", 0x3F8068, 0x1c, 0x0;
+	// string255 thirdTextLine : "VVVVVV.exe", 0x3F8068, 0x38, 0x0;
+	// string255 fourthTextLine : "VVVVVV.exe", 0x3F8068, 0x54, 0x0;
+}
+
+state("VVVVVV", "v2.0") {
+	int doneLoading : "VVVVVV.exe", 0x637054;
+	string255 firstTextLine : "VVVVVV.exe", 0x637098, 0x0, 0x0;
 }
 
 startup {
@@ -96,6 +100,10 @@ init {
 		
 		if (version == "v2.2") {
 			var gameObjectAddr = -1;
+
+			// Read the save directory this way, because using state in init is apparently not reliable
+			// Specifically, the state doesn't update when you set the version, so using any pointer paths not in the "default" version doesn't work
+			var saveDirectory = game.ReadString(IntPtr.Add(modules.First().BaseAddress, 0x3F7DD8), 255);
 			
 			// Find the memory page containing the stack
 			foreach (MemoryBasicInformation mbi in game.MemoryPages()) {
@@ -130,7 +138,7 @@ init {
 				// Use that to verify we have successfully found the right address
 				var tempGameObjectAddr = musicClassPtr.ToInt32() + 0x418 - 0x28E8;
 				var saveDirAddr = game.ReadValue<int>(new IntPtr(tempGameObjectAddr));
-				if (game.ReadString(new IntPtr(saveDirAddr), 255) == current.saveDirectory) {
+				if (game.ReadString(new IntPtr(saveDirAddr), 255) == saveDirectory) {
 					gameObjectAddr = tempGameObjectAddr;
 					break;
 				}
@@ -158,18 +166,22 @@ init {
 			vars.timeTrialAddr		= gameObjectAddr + 0x27C;
 			vars.trinketCountAddr	= gameObjectAddr + 0x444;
 		} else if (version == "v2.0") {
-			var ptr = IntPtr.Add(modules.First().BaseAddress, 0x0167658);
-			int addr = game.ReadValue<int>(ptr) + 0x4B8;
+			// BUG: This pointer path seems to be unreliable
+			// Let's wait one second because that's definitely the best solution
+			Thread.Sleep(1000);
+			
+			var ptr = IntPtr.Add(modules.First().BaseAddress, 0x43330);
+			int threadstack0 = game.ReadValue<int>(ptr) + 0xB94;
 
-			vars.finalStretchAddr = addr-0x470;
-			vars.gamestateAddr = addr;
-			vars.menuIDAddr = addr+0x8;
-			vars.gameTimeFrameAddr = addr+0x3c;
-			vars.gameTimeSecAddr = addr+0x40;
-			vars.gameTimeMinAddr = addr+0x44;
-			vars.gameTimeHourAddr = addr+0x48;
-			vars.timeTrialAddr = addr+0x138;
-			vars.trinketCountAddr = addr+0x250;
+			vars.gamestateAddr		=	threadstack0 - 0xC50;
+			vars.finalStretchAddr	=	vars.gamestateAddr - 0x470;
+			vars.menuIDAddr			=	vars.gamestateAddr + 0x8;
+			vars.gameTimeFrameAddr	=	vars.gamestateAddr + 0x3c;
+			vars.gameTimeSecAddr	=	vars.gamestateAddr + 0x40;
+			vars.gameTimeMinAddr	=	vars.gamestateAddr + 0x44;
+			vars.gameTimeHourAddr	=	vars.gamestateAddr + 0x48;
+			vars.timeTrialAddr		=	vars.gamestateAddr + 0x138;
+			vars.trinketCountAddr	=	vars.gamestateAddr + 0x250;
 		}
 	}
 }
@@ -483,7 +495,6 @@ update {
 
 		vars.timeTrial = game.ReadValue<int>(new IntPtr(vars.timeTrialAddr));
 		vars.finalMode = game.ReadValue<int>(new IntPtr(vars.finalStretchAddr));
-
 		return true;
 	}
 }
