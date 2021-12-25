@@ -2,6 +2,29 @@ state("VVVVVV", "unknown") {
 	// Default state
 }
 
+state("VVVVVV", "v2.3.6") {	
+	// Game time variables
+	int gametimeFrames : "VVVVVV.exe", 0x1C2108;
+	int gametimeSeconds : "VVVVVV.exe", 0x1C210C;
+	int gametimeMinutes : "VVVVVV.exe", 0x1C2110;
+	int gametimeHours : "VVVVVV.exe", 0x1C2114;
+
+	// Variables for starting the timer
+	bool fadetomode : "VVVVVV.exe", 0x1C0CC4;
+	int gotomode : "VVVVVV.exe", 0x1C0CCC;
+	int timetrialcountdown : "VVVVVV.exe", 0x1C2280;
+	
+	// Variables for splitting
+	bool finalStretch : "VVVVVV.exe", 0x1C4D55;
+	int gamestate : "VVVVVV.exe", 0x1C20C0; // actually called state in source
+	string255 firstTextLineSmall : "VVVVVV.exe", 0x1C1FE0, 0x0;
+	string255 firstTextLineLarge : "VVVVVV.exe", 0x1C1FE0, 0x0, 0x0;
+
+	// Variables for resetting
+	int menustate : "VVVVVV.exe", 0x1C20CC; // actually called gamestate in source
+	bool ingame_titlemode : "VVVVVV.exe", 0x1C2B7E;
+}
+
 state("VVVVVV", "v2.3.4") {	
 	// Game time variables
 	int gametimeFrames : "VVVVVV.exe", 0x1C1108;
@@ -82,6 +105,8 @@ init {
 		version = "v2.2";
 	} else if (modules.First().ModuleMemorySize == 0x3E9000) {
 		version = "v2.3.4";
+	} else if (modules.First().ModuleMemorySize == 0x3EA000) {
+		version = "v2.3.6";
 	} else {
 		version = "unknown";
 	}
@@ -187,7 +212,7 @@ init {
 }
 
 start {
-	if (version == "v2.3.4") {
+	if (version == "v2.3.4" | version == "v2.3.6") {
 		// Triggers when fade to new mode completes
 		if (!current.fadetomode && old.fadetomode) {
 			if (current.gotomode == 0) {
@@ -262,7 +287,7 @@ start {
 }
 
 split {
-	if (version == "v2.3.4") {
+	if (version == "v2.3.4" | version == "v2.3.6") {
 		// Gamestate splits
 		// Make sure to only split once - current gamestate in range, old gamestate out of range
 		if (current.gamestate != old.gamestate) {
@@ -402,7 +427,7 @@ split {
 }
 
 reset {
-	if (version == "v2.3.4") {
+	if (version == "v2.3.4" | version == "v2.3.6") {
 		// menustate values:
 		// 0: in-game
 		// 1: main menu
@@ -447,7 +472,7 @@ reset {
 }
 
 gameTime {
-	if (version == "v2.3.4") {
+	if (version == "v2.3.4" | version == "v2.3.6") {
 		return new TimeSpan(0, current.gametimeHours, current.gametimeMinutes, current.gametimeSeconds, 100*current.gametimeFrames/3);
 	} else {
 		// Legacy versions
@@ -466,7 +491,7 @@ update {
 		return false;
 	}
 	
-	if (version == "v2.3.4") {
+	if (version == "v2.3.4" | version == "v2.3.6") {
 		// No updates needed
 		return true;
 	} else {
