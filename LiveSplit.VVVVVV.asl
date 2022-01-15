@@ -111,9 +111,9 @@ init {
 		version = "unknown";
 	}
 
-	if (version == "v2.3.4") {
+	if (version == "v2.3.4" || version == "v2.3.6") {
 		// No init needed
-	} else if (version != "unknown") {
+	} else if (version == "v2.0" || version == "v2.2") {
 		// Legacy versions
 		vars.gamestate = -1;
 		vars.menuID = -1;
@@ -212,7 +212,7 @@ init {
 }
 
 start {
-	if (version == "v2.3.4" | version == "v2.3.6") {
+	if (version == "v2.3.4" || version == "v2.3.6") {
 		// Triggers when fade to new mode completes
 		if (!current.fadetomode && old.fadetomode) {
 			if (current.gotomode == 0) {
@@ -263,7 +263,7 @@ start {
 		}
 
 		return false;
-	} else {
+	} else if (version == "v2.0" || version == "v2.2") {
 		// Legacy versions
 
 		// Start if main menu closes and IGT resets
@@ -287,7 +287,7 @@ start {
 }
 
 split {
-	if (version == "v2.3.4" | version == "v2.3.6") {
+	if (version == "v2.3.4" || version == "v2.3.6") {
 		// Gamestate splits
 		// Make sure to only split once - current gamestate in range, old gamestate out of range
 		if (current.gamestate != old.gamestate) {
@@ -374,7 +374,7 @@ split {
 		}
 
 		return false;
-	} else {
+	} else if (version == "v2.0" || version == "v2.2") {
 		// Legacy versions
 		
 		// split on crewmate rescue and intermissions
@@ -427,7 +427,7 @@ split {
 }
 
 reset {
-	if (version == "v2.3.4" | version == "v2.3.6") {
+	if (version == "v2.3.4" || version == "v2.3.6") {
 		// menustate values:
 		// 0: in-game
 		// 1: main menu
@@ -453,7 +453,7 @@ reset {
 		}
 
 		return false;
-	} else {
+	} else if (version == "v2.0" || version == "v2.2") {
 		// Legacy versions
 		if (vars.gameTimeOld.TotalMilliseconds > vars.gameTime.TotalMilliseconds && vars.gameTime.TotalMilliseconds < 67) {
 			// reset if game time resets (on exit to menu)
@@ -472,9 +472,9 @@ reset {
 }
 
 gameTime {
-	if (version == "v2.3.4" | version == "v2.3.6") {
+	if (version == "v2.3.4" || version == "v2.3.6") {
 		return new TimeSpan(0, current.gametimeHours, current.gametimeMinutes, current.gametimeSeconds, 100*current.gametimeFrames/3);
-	} else {
+	} else if (version == "v2.0" || version == "v2.2") {
 		// Legacy versions
 		return vars.gameTime;
 	}
@@ -491,10 +491,10 @@ update {
 		return false;
 	}
 	
-	if (version == "v2.3.4" | version == "v2.3.6") {
+	if (version == "v2.3.4" || version == "v2.3.6") {
 		// No updates needed
 		return true;
-	} else {
+	} else if (version == "v2.0" || version == "v2.2") {
 		// Legacy versions
 
 		// Update variables
