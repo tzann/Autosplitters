@@ -82,8 +82,8 @@ startup {
 	vars.hello = "Split on \"Hello!\" (for glitched Any%)";
 	vars.menuReset = "Reset on exiting to menu";
 	vars.ils = "Start/Split/Reset on Time Trials";
-	vars.teleporterUnderTower = "Split on teleporting to the teleporter under Tower";
-	vars.teleporterUnderLab = "Split on teleporting to the teleporter under Lab";
+	vars.teleporterUnderTower = "Split on teleporting to the teleporter under Tower (for 100%)";
+	vars.teleporterUnderLab = "Split on teleporting to the teleporter under Lab (for 100%)";
 
 	settings.Add(vars.newgame, true);
 	settings.Add(vars.violet, true);
