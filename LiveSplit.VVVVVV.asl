@@ -19,6 +19,8 @@ state("VVVVVV", "v2.3.6") {
 	int gamestate : "VVVVVV.exe", 0x1C20C0; // actually called state in source
 	string255 firstTextLineSmall : "VVVVVV.exe", 0x1C1FE0, 0x0;
 	string255 firstTextLineLarge : "VVVVVV.exe", 0x1C1FE0, 0x0, 0x0;
+	int teleport_to_x : "VVVVVV.exe", 0x1C217C;
+	int teleport_to_y : "VVVVVV.exe", 0x1C2180;
 
 	// Variables for resetting
 	int menustate : "VVVVVV.exe", 0x1C20CC; // actually called gamestate in source
@@ -80,6 +82,8 @@ startup {
 	vars.hello = "Split on \"Hello!\" (for glitched Any%)";
 	vars.menuReset = "Reset on exiting to menu";
 	vars.ils = "Start/Split/Reset on Time Trials";
+	vars.teleporterUnderTower = "Split on teleporting to the teleporter under Tower";
+	vars.teleporterUnderLab = "Split on teleporting to the teleporter under Lab";
 
 	settings.Add(vars.newgame, true);
 	settings.Add(vars.violet, true);
@@ -96,6 +100,8 @@ startup {
 	settings.Add(vars.hello, false);
 	settings.Add(vars.menuReset, true);
 	settings.Add(vars.ils, false);
+	settings.Add(vars.teleporterUnderTower, false);
+	settings.Add(vars.teleporterUnderLab, false);
 }
 
 init {
@@ -358,6 +364,12 @@ split {
 					// Split on completing time trials
 					return settings[vars.ils];
 				}
+			} else if (current.gamestate == 4050 && current.teleport_to_x == 8 && current.teleport_to_y == 11) {
+				// Split on teleporting to the teleporter under Tower
+				return settings[vars.teleporterUnderTower];
+			} else if (current.gamestate == 4020 && current.teleport_to_x == 0 && current.teleport_to_y == 0) {
+				// Split on teleporting to the teleporter under Lab
+				return settings[vars.teleporterUnderLab];
 			}
 		}
 		
