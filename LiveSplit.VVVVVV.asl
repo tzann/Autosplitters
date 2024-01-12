@@ -549,7 +549,6 @@ isLoading {
 }
 
 update {
-	print( current.firstTextLineSmall );
 	if (version == "unknown") {
 		// Prevents isLoading, gameTime, reset, split, and start from running
 		return false;
