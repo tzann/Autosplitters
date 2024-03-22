@@ -117,41 +117,68 @@ state("VVVVVV", "v2.0") {
 startup {
 	refreshRate = 60;
 
+	vars.startresetParent = "Settings for starting/resetting";
 	vars.newgame = "Start timer on new game";
+	vars.menuReset = "Reset on exiting to menu";
+	vars.ils = "Start/Split/Reset on Time Trials";
+
+	vars.crewmatesParent = "Settings for splitting on rescuing crewmates";
 	vars.violet = "Split on Violet's teleporter (SS1)";
 	vars.vitellary = "Split on rescuing Vitellary (SS2)";
 	vars.vermilion = "Split on rescuing Vermilion (Tower)";
 	vars.verdigris = "Split on rescuing Verdigris (Warp Zone)";
 	vars.victoria = "Split on rescuing Victoria (Lab)";
+
+	vars.intermissionsParent = "Settings for splitting on completing intermissions";
 	vars.int1 = "Split on completing Intermission 1";
 	vars.int2 = "Split on completing Intermission 2";
-	vars.gameComplete = "Split on game completion";
+
+	vars.hundredpercentParent = "Settings pertaining to 100% categories";
 	vars.trinkets = "Split on collecting trinkets";
+	vars.labTelejump = "Split on teleporting to the teleporter under Lab";
+	vars.towerTelejump = "Split on teleporting to the teleporter under Tower";
+
+	vars.miscellaneousParent = "Miscellaneous settings";
+	vars.gameComplete = "Split on game completion";
 	vars.dis = "Split on talking to Victoria (for DIS)";
 	vars.finalStretch = "Split on Final Level terminal";
-	vars.hello = "Split on \"Hello!\" (for glitched Any%)";
-	vars.menuReset = "Reset on exiting to menu";
-	vars.ils = "Start/Split/Reset on Time Trials";
-	vars.teleporterUnderTower = "Split on teleporting to the teleporter under Tower (for 100%)";
-	vars.teleporterUnderLab = "Split on teleporting to the teleporter under Lab (for 100%)";
+	vars.hello = "Split on \"Hello!\" (for Text Storage and Credits Warp)";
 
+	settings.Add(vars.startresetParent, true);
+	settings.CurrentDefaultParent = vars.startresetParent;
 	settings.Add(vars.newgame, true);
+	settings.Add(vars.menuReset, true);
+	settings.Add(vars.ils, false);
+
+	settings.CurrentDefaultParent = null;
+	settings.Add(vars.crewmatesParent, true);
+	settings.CurrentDefaultParent = vars.crewmatesParent;
 	settings.Add(vars.violet, true);
 	settings.Add(vars.vitellary, true);
 	settings.Add(vars.vermilion, true);
 	settings.Add(vars.verdigris, true);
 	settings.Add(vars.victoria, true);
+
+	settings.CurrentDefaultParent = null;
+	settings.Add(vars.intermissionsParent, true);
+	settings.CurrentDefaultParent = vars.intermissionsParent;
 	settings.Add(vars.int1, true);
 	settings.Add(vars.int2, true);
-	settings.Add(vars.gameComplete, true);
+
+	settings.CurrentDefaultParent = null;
+	settings.Add(vars.hundredpercentParent, true);
+	settings.CurrentDefaultParent = vars.hundredpercentParent;
 	settings.Add(vars.trinkets, false);
+	settings.Add(vars.labTelejump, false);
+	settings.Add(vars.towerTelejump, false);
+
+	settings.CurrentDefaultParent = null;
+	settings.Add(vars.miscellaneousParent, true);
+	settings.CurrentDefaultParent = vars.miscellaneousParent;
+	settings.Add(vars.gameComplete, true);
 	settings.Add(vars.dis, false);
 	settings.Add(vars.finalStretch, false);
 	settings.Add(vars.hello, false);
-	settings.Add(vars.menuReset, true);
-	settings.Add(vars.ils, false);
-	settings.Add(vars.teleporterUnderTower, false);
-	settings.Add(vars.teleporterUnderLab, false);
 }
 
 init {
@@ -420,10 +447,10 @@ split {
 				}
 			} else if (current.gamestate == 4050 && current.teleport_to_x == 8 && current.teleport_to_y == 11) {
 				// Split on teleporting to the teleporter under Tower
-				return settings[vars.teleporterUnderTower];
+				return settings[vars.towerTelejump];
 			} else if (current.gamestate == 4020 && current.teleport_to_x == 0 && current.teleport_to_y == 0) {
 				// Split on teleporting to the teleporter under Lab
-				return settings[vars.teleporterUnderLab];
+				return settings[vars.labTelejump];
 			}
 		}
 		
