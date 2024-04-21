@@ -21,6 +21,7 @@ state("VVVVVV", "v2.4.1") {
 	string255 firstTextLineLarge : "VVVVVV.exe", 0x23D708, 0x0, 0x0;
 	int teleport_to_x : "VVVVVV.exe", 0x41A988;
 	int teleport_to_y : "VVVVVV.exe", 0x41A98C;
+	byte100 collect : "VVVVVV.exe", 0x22B760;
 	
 	// Variables for resetting
 	int menustate : "VVVVVV.exe", 0x41A8E4; // actually called gamestate in source
@@ -134,12 +135,34 @@ startup {
 	vars.int2 = "Split on completing Intermission 2";
 
 	vars.hundredpercentParent = "Settings pertaining to 100% categories";
-	vars.trinkets = "Split on collecting trinkets";
 	vars.labTelejump = "Split on teleporting to the teleporter under Lab";
 	vars.towerTelejump = "Split on teleporting to the teleporter under Tower";
 
+	vars.trinkets = "Split on collecting trinkets";
+	vars.trinketSecretToNobody = "Split on collecting the \"It's a Secret to Nobody\" trinket";
+	vars.trinketTrenchWarfare = "Split on collecting the \"Trench Warfare\" trinket";
+	vars.trinketWorthTheChallenge = "Split on collecting the \"Young Man, It's Worth the Challenge\" trinket";
+	vars.trinketLabMaze = "Split on collecting the unnamed trinket in Lab";
+	vars.trinketTantalizing = "Split on collecting the \"The Tantalizing Trinket\" trinket";
+	vars.trinketUnobtainium = "Split on collecting the \"Purest Unobtainium\" trinket";
+	vars.trinketVictoria = "Split on collecting Victoria's trinket";
+	vars.trinketTower1 = "Split on collecting the first Tower trinket";
+	vars.trinketTower2 = "Split on collecting the second Tower trinket";
+	vars.trinketElephant = "Split on collecting the elephant trinket";
+	vars.trinketOneWayRoom = "Split on collecting the \"One Way Room\" trinket";
+	vars.trinketKeepComingBack = "Split on collecting the \"You Just Keep Coming Back\" trinket";
+	vars.trinketClarionCall = "Split on collecting the \"Clarion Call\" trinket";
+	vars.trinketDTTHW = "Split on collecting the \"Doing Things the Hard Way\" trinket";
+	vars.trinketPrizeForTheReckless = "Split on collecting the \"Prize for the Reckless\" trinket";
+	vars.trinketCave1 = "Split on collecting the unnamed trinket near the ship";
+	vars.trinketCave2 = "Split on collecting the unnamed trinket near the Lab";
+	vars.trinketCave3 = "Split on collecting the unnamed trinket near the Warp Zone";
+	vars.trinketEdgeGames = "Split on collecting the \"Edge Games\" trinket";
+	vars.trinketV = "Split on collecting the \"V\" trinket";
+
 	vars.miscellaneousParent = "Miscellaneous settings";
 	vars.gameComplete = "Split on game completion";
+	vars.gameCompleteAndAllTrinkets = "Only split if all 20 trinkets have been collected (for 100%)";
 	vars.dis = "Split on talking to Victoria (for DIS)";
 	vars.finalStretch = "Split on Final Level terminal";
 	vars.hello = "Split on \"Hello!\" (for Text Storage and Credits Warp)";
@@ -169,6 +192,29 @@ startup {
 	settings.Add(vars.hundredpercentParent, true);
 	settings.CurrentDefaultParent = vars.hundredpercentParent;
 	settings.Add(vars.trinkets, false);
+	settings.CurrentDefaultParent = vars.trinkets;
+	settings.Add(vars.trinketSecretToNobody, false);
+	settings.Add(vars.trinketTrenchWarfare, false);
+	settings.Add(vars.trinketWorthTheChallenge, false);
+	settings.Add(vars.trinketLabMaze, false);
+	settings.Add(vars.trinketTantalizing, false);
+	settings.Add(vars.trinketUnobtainium, false);
+	settings.Add(vars.trinketVictoria, false);
+	settings.Add(vars.trinketTower1, false);
+	settings.Add(vars.trinketTower2, false);
+	settings.Add(vars.trinketElephant, false);
+	settings.Add(vars.trinketOneWayRoom, false);
+	settings.Add(vars.trinketKeepComingBack, false);
+	settings.Add(vars.trinketClarionCall, false);
+	settings.Add(vars.trinketDTTHW, false);
+	settings.Add(vars.trinketPrizeForTheReckless, false);
+	settings.Add(vars.trinketCave1, false);
+	settings.Add(vars.trinketCave2, false);
+	settings.Add(vars.trinketCave3, false);
+	settings.Add(vars.trinketEdgeGames, false);
+	settings.Add(vars.trinketV, false);
+
+	settings.CurrentDefaultParent = vars.hundredpercentParent;
 	settings.Add(vars.labTelejump, false);
 	settings.Add(vars.towerTelejump, false);
 
@@ -176,6 +222,7 @@ startup {
 	settings.Add(vars.miscellaneousParent, true);
 	settings.CurrentDefaultParent = vars.miscellaneousParent;
 	settings.Add(vars.gameComplete, true);
+	settings.Add(vars.gameCompleteAndAllTrinkets, false, null, vars.gameComplete);
 	settings.Add(vars.dis, false);
 	settings.Add(vars.finalStretch, false);
 	settings.Add(vars.hello, false);
@@ -374,7 +421,182 @@ start {
 }
 
 split {
-	if (version == "v2.3.4" || version == "v2.3.6" || version == "v2.4" || version == "v2.4.1") {
+	if (version == "v2.4.1") {
+		// Trinket splits
+		if (settings[vars.trinkets]) {
+			if (current.collect[0] == 1 && old.collect[0] == 0) {
+				// Trinket - It's a Secret to Nobody
+				return settings[vars.trinketSecretToNobody];
+			} else if (current.collect[1] == 1 && old.collect[1] == 0) {
+				// Trinket - Trench Warfare
+				return settings[vars.trinketTrenchWarfare];
+			} else if (current.collect[9] == 1 && old.collect[9] == 0) {
+				// Trinket - Young Man, It's Worth the Challenge
+				return settings[vars.trinketWorthTheChallenge];
+			} else if (current.collect[14] == 1 && old.collect[14] == 0) {
+				// Trinket - Lab Maze
+				return settings[vars.trinketLabMaze];
+			} else if (current.collect[10] == 1 && old.collect[10] == 0) {
+				// Trinket - Lab Maze
+				return settings[vars.trinketTantalizing];
+			} else if (current.collect[11] == 1 && old.collect[11] == 0) {
+				// Trinket - Purest Unobtainium
+				return settings[vars.trinketUnobtainium];
+			} else if (current.collect[18] == 1 && old.collect[18] == 0) {
+				// Trinket - Victoria
+				return settings[vars.trinketVictoria];
+			} else if (current.collect[7] == 1 && old.collect[7] == 0) {
+				// Trinket - Tower 1
+				return settings[vars.trinketTower1];
+			} else if (current.collect[8] == 1 && old.collect[8] == 0) {
+				// Trinket - Lab Maze
+				return settings[vars.trinketTower2];
+			} else if (current.collect[17] == 1 && old.collect[17] == 0) {
+				// Trinket - Elephant
+				return settings[vars.trinketElephant];
+			} else if (current.collect[2] == 1 && old.collect[2] == 0) {
+				// Trinket - One Way Room
+				return settings[vars.trinketOneWayRoom];
+			} else if (current.collect[3] == 1 && old.collect[3] == 0) {
+				// Trinket - You Just Keep Coming Back
+				return settings[vars.trinketKeepComingBack];
+			} else if (current.collect[4] == 1 && old.collect[4] == 0) {
+				// Trinket - Clarion Call
+				return settings[vars.trinketClarionCall];
+			} else if (current.collect[5] == 1 && old.collect[5] == 0) {
+				// Trinket - Doing Things the Hard Way
+				return settings[vars.trinketDTTHW];
+			} else if (current.collect[6] == 1 && old.collect[6] == 0) {
+				// Trinket - Prize for the Reckless
+				return settings[vars.trinketReckless];
+			} else if (current.collect[15] == 1 && old.collect[15] == 0) {
+				// Trinket - Cave 1
+				return settings[vars.trinketCave1];
+			} else if (current.collect[16] == 1 && old.collect[16] == 0) {
+				// Trinket - Cave 2
+				return settings[vars.trinketCave2];
+			} else if (current.collect[13] == 1 && old.collect[13] == 0) {
+				// Trinket - Cave 3
+				return settings[vars.trinketCave3];
+			} else if (current.collect[12] == 1 && old.collect[12] == 0) {
+				// Trinket - Edge Games
+				return settings[vars.trinketEdgeGames];
+			} else if (current.collect[19] == 1 && old.collect[19] == 0) {
+				// Trinket - V
+				return settings[vars.trinketV];
+			}
+		}
+
+		// Gamestate splits
+		// Make sure to only split once - current gamestate in range, old gamestate out of range
+		if (current.gamestate != old.gamestate) {
+			// Level endings
+			if (current.gamestate >= 3006 && current.gamestate <= 3011) {
+				if (old.gamestate < 3006 || old.gamestate > 3011) {
+					// Warp Zone / Verdigris
+					return settings[vars.verdigris];
+				}
+			} else if (current.gamestate >= 3020 && current.gamestate <= 3025) {
+				if (old.gamestate < 3020 || old.gamestate > 3025) {
+					// Space Station 2 / Vitellary
+					return settings[vars.vitellary];
+				}
+			} else if (current.gamestate >= 3040 && current.gamestate <= 3045) {
+				if (old.gamestate < 3040 || old.gamestate > 3045) {
+					// Laboratory / Victoria
+					return settings[vars.victoria];
+				}
+			} else if (current.gamestate >= 3050 && current.gamestate <= 3056) {
+				if (old.gamestate < 3050 || old.gamestate > 3056) {
+					// Space Station 1 / Violet
+					// This split is activated elsewhere
+				}
+			} else if (current.gamestate >= 3060 && current.gamestate <= 3065) {
+				if (old.gamestate < 3060 || old.gamestate > 3065) {
+					// Tower / Vermilion
+					return settings[vars.vermilion];
+				}
+			} else if (current.gamestate >= 3080 && current.gamestate <= 3082) {
+				if (old.gamestate < 3080 || old.gamestate > 3082) {
+					// Intermission 2 / Gravitron
+					return settings[vars.int2];
+				}
+			} else if (current.gamestate >= 3085 && current.gamestate <= 3087) {
+				if (old.gamestate < 3085 || old.gamestate > 3087) {
+					// Intermission 1
+					return settings[vars.int1];
+				}
+			}
+
+			// Other gamestate splits
+			if (current.gamestate >= 4091 && current.gamestate <= 4099) {
+				if (old.gamestate < 4091 || old.gamestate > 4099) {
+					// Split on Violet's teleporter
+					return settings[vars.violet];
+				}
+			} else if (current.gamestate >= 3503 && current.gamestate <= 3509) {
+				if (old.gamestate < 3503 || old.gamestate > 3509) {
+					// Game completion (When "All crew members rescued!" appears on screen)
+					// This is when IGT stops counting, which is why we don't split on "Game complete!" appearing
+
+					// Ugly hack to allow only splitting if all 20 trinkets have been collected as well
+					var allTrinketsKludge = true;
+
+					if (settings[vars.gameCompleteAndAllTrinkets]) {
+						for (var i = 0; i < 20; i++) {
+							if (current.collect[i] == 0) {
+								allTrinketsKludge = false;
+								break;
+							}
+						}
+					}
+
+					if (allTrinketsKludge) {
+						return settings[vars.gameComplete];
+					}
+				}
+			} else if (current.gamestate == 33) {
+				if (old.gamestate != 33) {
+					// Split on talking to Victoria
+					// Note: This might be unreliable on laggy computers
+					return settings[vars.dis];
+				}
+			} else if (current.gamestate >= 1000 && current.gamestate <= 1003) {
+				if (old.gamestate < 1000 || old.gamestate > 1003) {
+					// Split on collecting trinkets
+					// Note: This might be unreliable on laggy computers (when doing perfect text box skips)
+					return settings[vars.trinkets];
+				}
+			} else if (current.gamestate >= 82 && current.gamestate <= 84) {
+				if (old.gamestate < 82 || old.gamestate > 84) {
+					// Split on completing time trials
+					return settings[vars.ils];
+				}
+			} else if (current.gamestate == 4050 && current.teleport_to_x == 8 && current.teleport_to_y == 11) {
+				// Split on teleporting to the teleporter under Tower
+				return settings[vars.towerTelejump];
+			} else if (current.gamestate == 4020 && current.teleport_to_x == 0 && current.teleport_to_y == 0) {
+				// Split on teleporting to the teleporter under Lab
+				return settings[vars.labTelejump];
+			}
+		}
+		
+		if (current.finalStretch && !old.finalStretch) {
+			// Split on activating final stretch
+			return settings[vars.finalStretch];
+		}
+
+		if (current.firstTextLineSmall == "Hello!" || current.firstTextLineLarge == "Hello!") {
+			if (old.firstTextLineSmall != "Hello!" && old.firstTextLineLarge != "Hello!") {
+				// Split on "Hello!" appearing
+				return settings[vars.hello];
+			}
+		}
+
+		return false;
+	}
+
+	if (version == "v2.3.4" || version == "v2.3.6" || version == "v2.4") {
 		// Gamestate splits
 		// Make sure to only split once - current gamestate in range, old gamestate out of range
 		if (current.gamestate != old.gamestate) {
@@ -433,12 +655,6 @@ split {
 					// Split on talking to Victoria
 					// Note: This might be unreliable on laggy computers
 					return settings[vars.dis];
-				}
-			} else if (current.gamestate >= 1000 && current.gamestate <= 1003) {
-				if (old.gamestate < 1000 || old.gamestate > 1003) {
-					// Split on collecting trinkets
-					// Note: This might be unreliable on laggy computers (when doing perfect text box skips)
-					return settings[vars.trinkets];
 				}
 			} else if (current.gamestate >= 82 && current.gamestate <= 84) {
 				if (old.gamestate < 82 || old.gamestate > 84) {
@@ -603,7 +819,6 @@ isLoading {
 }
 
 update {
-	
 	if (version == "unknown") {
 		// Prevents isLoading, gameTime, reset, split, and start from running
 		return false;
