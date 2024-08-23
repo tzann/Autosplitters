@@ -2,6 +2,32 @@ state("VVVVVV", "unknown") {
 	// Default state
 }
 
+state("VVVVVV", "v2.4.2") {
+	// Game time variables
+	int gametimeFrames : "VVVVVV.exe", 0x40FB58;
+	int gametimeSeconds : "VVVVVV.exe", 0x40FB5C;
+	int gametimeMinutes : "VVVVVV.exe", 0x40FB60;
+	int gametimeHours : "VVVVVV.exe", 0x40FB64;
+
+	// Variables for starting the timer
+	bool fadetomode : "VVVVVV.exe", 0x2249F0;
+	int gotomode : "VVVVVV.exe", 0x2249F8;
+	int timetrialcountdown : "VVVVVV.exe", 0x40FCCC;
+
+	// Variables for splitting
+	bool finalStretch : "VVVVVV.exe", 0x412619;
+	int gamestate : "VVVVVV.exe", 0x40FB08; // actually called state in source
+	string255 firstTextLineSmall : "VVVVVV.exe", 0x232938, 0x0;
+	string255 firstTextLineLarge : "VVVVVV.exe", 0x232938, 0x0, 0x0;
+	int teleport_to_x : "VVVVVV.exe", 0x40FBB8;
+	int teleport_to_y : "VVVVVV.exe", 0x40FBBC;
+	byte100 collect : "VVVVVV.exe", 0x220760;
+	
+	// Variables for resetting
+	int menustate : "VVVVVV.exe", 0x40FB14; // actually called gamestate in source
+	bool ingame_titlemode : "VVVVVV.exe", 0x41051A;
+}
+
 state("VVVVVV", "v2.4.1") {
 	// Game time variables
 	int gametimeFrames : "VVVVVV.exe", 0x41A928;
@@ -229,6 +255,8 @@ startup {
 }
 
 init {
+	
+
 	if (modules.First().ModuleMemorySize == 0x6D9000) {
 		version = "v2.0";
 	} else if (modules.First().ModuleMemorySize == 0x456000) {
@@ -241,11 +269,13 @@ init {
 		version = "v2.4";
 	} else if (modules.First().ModuleMemorySize == 0x44E000) {
 		version = "v2.4.1";
+	} else if (modules.First().ModuleMemorySize == 0x442000) {
+		version = "v2.4.2";
 	} else {
 		version = "unknown";
 	}
 
-	if (version == "v2.3.4" || version == "v2.3.6" || version == "v2.4" || version == "v2.4.1") {
+	if (version == "v2.3.4" || version == "v2.3.6" || version == "v2.4" || version == "v2.4.1" || version == "v2.4.2") {
 		// No init needed
 	} else if (version == "v2.0" || version == "v2.2") {
 		// Legacy versions
@@ -346,7 +376,7 @@ init {
 }
 
 start {
-	if (version == "v2.3.4" || version == "v2.3.6" || version == "v2.4" || version == "v2.4.1") {
+	if (version == "v2.3.4" || version == "v2.3.6" || version == "v2.4" || version == "v2.4.1" || version == "v2.4.2") {
 		// Triggers when fade to new mode completes
 		if (!current.fadetomode && old.fadetomode) {
 			if (current.gotomode == 0) {
@@ -421,7 +451,7 @@ start {
 }
 
 split {
-	if (version == "v2.4.1") {
+	if (version == "v2.4.1" || version == "v2.4.2") {
 		// Trinket splits
 		if (settings[vars.trinkets]) {
 			if (current.collect[0] == 1 && old.collect[0] == 0) {
@@ -736,7 +766,7 @@ split {
 }
 
 reset {
-	if (version == "v2.4" || version == "v2.4.1") {
+	if (version == "v2.4" || version == "v2.4.1" || version == "v2.4.2") {
 		// menustate values:
 		// 0: in-game
 		// 1: main menu
@@ -805,7 +835,7 @@ reset {
 }
 
 gameTime {
-	if (version == "v2.3.4" || version == "v2.3.6" || version == "v2.4" || version == "v2.4.1") {
+	if (version == "v2.3.4" || version == "v2.3.6" || version == "v2.4" || version == "v2.4.1" || version == "v2.4.2") {
 		return new TimeSpan(0, current.gametimeHours, current.gametimeMinutes, current.gametimeSeconds, 100*current.gametimeFrames/3);
 	} else if (version == "v2.0" || version == "v2.2") {
 		// Legacy versions
@@ -824,7 +854,7 @@ update {
 		return false;
 	}
 	
-	if (version == "v2.3.4" || version == "v2.3.6" || version == "v2.4" || version == "v2.4.1") {
+	if (version == "v2.3.4" || version == "v2.3.6" || version == "v2.4" || version == "v2.4.1" || version == "v2.4.2") {
 		// No updates needed
 		return true;
 	} else if (version == "v2.0" || version == "v2.2") {
