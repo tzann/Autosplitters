@@ -498,7 +498,7 @@ split {
 				return settings[vars.trinketDTTHW];
 			} else if (current.collect[6] == 1 && old.collect[6] == 0) {
 				// Trinket - Prize for the Reckless
-				return settings[vars.trinketReckless];
+				return settings[vars.trinketPrizeForTheReckless];
 			} else if (current.collect[15] == 1 && old.collect[15] == 0) {
 				// Trinket - Cave 1
 				return settings[vars.trinketCave1];
