@@ -293,10 +293,12 @@ init {
 		version = "v2.4";
 	} else if (modules.First().ModuleMemorySize == 0x44E000) {
 		version = "v2.4.1";
-	} else if (modules.First().ModuleMemorySize == 0x442000 && modules.First().EntryPointAddress.ToInt32() == 0x4C6255) {
-		version = "v2.4.2";
-	} else if (modules.First().ModuleMemorySize == 0x442000 && modules.First().EntryPointAddress.ToInt32() == 0x4C69C5) {
-		version = "v2.4.3";
+	} else if (modules.First().ModuleMemorySize == 0x442000) {
+		if (game.ReadString(IntPtr.Add(modules.First().BaseAddress, 0x19EE5C), 6) == "v2.4.2") {
+			version = "v2.4.2";
+		} else if (game.ReadString(IntPtr.Add(modules.First().BaseAddress, 0x19E62C), 6) == "v2.4.3") {
+			version = "v2.4.3";
+		}
 	} else {
 		version = "unknown";
 	}
